@@ -1,0 +1,122 @@
+@import "tailwindcss";
+
+/* WANDER design tokens: plum, white and soft grey, a calm resort feel. */
+@theme {
+  --color-paper: #f8f7fa; /* page background: barely-there grey */
+  --color-sand: #f0edf3; /* soft grey surfaces, hovers */
+  --color-card: #ffffff;
+  --color-ink: #231b27; /* text: deep plum-charcoal */
+  --color-ink-soft: #4e4655;
+  --color-muted: #827a89;
+  --color-line: #e7e3eb;
+  --color-plum: #5e2a59; /* brand plum */
+  --color-plum-dark: #2b1430;
+  --color-orchid: #8b3d81; /* calls to action */
+  --color-orchid-dark: #70306a;
+  --color-lilac: #dcc3e2; /* highlights on dark backgrounds */
+  --color-mist: #f4ecf4; /* pale plum tint */
+  --color-sky: #5b6f95;
+  --color-confirm: #2f7d5a;
+  --color-estimate: #a5661f;
+
+  --font-sans: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-display), Georgia, serif;
+
+  --shadow-card: 0 1px 2px rgb(43 20 48 / 0.04), 0 10px 30px -14px rgb(43 20 48 / 0.16);
+  --shadow-lift: 0 2px 6px rgb(43 20 48 / 0.05), 0 24px 50px -20px rgb(43 20 48 / 0.32);
+
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.015em;
+}
+
+/* Smooth everything that's interactive. */
+a,
+button,
+input,
+select {
+  transition-property: color, background-color, border-color, box-shadow, transform, opacity;
+  transition-duration: 220ms;
+  transition-timing-function: var(--ease-smooth);
+}
+button:not(:disabled):active,
+a:active {
+  transform: scale(0.98);
+}
+:focus-visible {
+  outline: 2px solid var(--color-orchid);
+  outline-offset: 2px;
+}
+
+/* Gentle wave pattern behind dark plum sections. */
+.topo {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Cg fill='none' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='1.2'%3E%3Cpath d='M-20 80 C 60 40, 140 120, 220 70 S 380 40, 440 90'/%3E%3Cpath d='M-20 130 C 70 90, 150 170, 230 120 S 370 90, 440 140'/%3E%3Cpath d='M-20 180 C 80 140, 160 220, 240 170 S 360 140, 440 190'/%3E%3Cpath d='M-20 230 C 90 190, 170 270, 250 220 S 350 190, 440 240'/%3E%3Cpath d='M-20 280 C 100 240, 180 320, 260 270 S 340 240, 440 290'/%3E%3Cpath d='M-20 330 C 110 290, 190 370, 270 320 S 330 290, 440 340'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+/* The signature plum gradient used for dark bands. */
+.plum-band {
+  background-color: var(--color-plum-dark);
+  background-image:
+    radial-gradient(1200px 500px at 85% -10%, rgb(139 61 129 / 0.55), transparent 60%),
+    radial-gradient(900px 400px at 0% 110%, rgb(94 42 89 / 0.6), transparent 60%),
+    linear-gradient(160deg, #2b1430 0%, #3d1a3f 55%, #2b1430 100%);
+}
+
+.leaflet-container {
+  font-family: var(--font-sans);
+  background: #eceaef;
+}
+.leaflet-popup-content-wrapper {
+  border-radius: 14px;
+  box-shadow: var(--shadow-lift);
+}
+
+input[type="range"] {
+  accent-color: var(--color-orchid);
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+.rise {
+  animation: rise 0.6s var(--ease-smooth) both;
+}
+.rise-2 { animation-delay: 80ms; }
+.rise-3 { animation-delay: 160ms; }
+.rise-4 { animation-delay: 240ms; }
+
+/* Soft fade between pages. */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.page-in {
+  animation: page-in 0.45s var(--ease-smooth) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
