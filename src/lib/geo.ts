@@ -20,9 +20,9 @@ export function haversineKm(aLat: number, aLng: number, bLat: number, bLng: numb
 export const TRANSPORT: Record<Transport, { label: string; kmh: number; overhead: number; detour: number; maxRadiusKm: number }> = {
   walk: { label: "Walking", kmh: 4.8, overhead: 0, detour: 1.25, maxRadiusKm: 2.5 },
   bike: { label: "Biking", kmh: 14, overhead: 2, detour: 1.3, maxRadiusKm: 7 },
-  transit: { label: "Public transit", kmh: 18, overhead: 9, detour: 1.35, maxRadiusKm: 10 },
-  rideshare: { label: "Rideshare / taxi", kmh: 32, overhead: 7, detour: 1.35, maxRadiusKm: 16 },
-  drive: { label: "Driving", kmh: 35, overhead: 5, detour: 1.35, maxRadiusKm: 20 },
+  transit: { label: "Public transit", kmh: 18, overhead: 9, detour: 1.35, maxRadiusKm: 8 },
+  rideshare: { label: "Rideshare / taxi", kmh: 32, overhead: 7, detour: 1.35, maxRadiusKm: 10 },
+  drive: { label: "Driving", kmh: 35, overhead: 5, detour: 1.35, maxRadiusKm: 12 },
 };
 
 export function travelMinutes(km: number, mode: Transport): number {

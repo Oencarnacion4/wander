@@ -158,11 +158,11 @@ export function ExploreForm({
           <div className="flex items-center gap-2 rounded-2xl border border-line bg-card px-3 py-2">
             <span className="text-muted">$</span>
             <input
-              type="number"
-              min={0}
-              step={5}
-              value={form.budget}
-              onChange={(e) => set("budget", Math.max(0, Number(e.target.value)))}
+              type="text"
+              inputMode="numeric"
+              value={form.budget === 0 ? "" : String(form.budget)}
+              placeholder="0"
+              onChange={(e) => set("budget", Number(e.target.value.replace(/\D/g, "").slice(0, 6)) || 0)}
               className="w-full bg-transparent outline-none font-semibold"
               aria-label="Budget amount"
             />

@@ -255,7 +255,7 @@ export default function SomewherePage() {
               </p>
               <div className="flex items-center gap-2 rounded-2xl border border-line px-3 py-2">
                 <span className="text-muted">$</span>
-                <input type="number" min={0} step={50} value={budget} onChange={(e) => setBudget(Math.max(0, Number(e.target.value)))} className="w-full bg-transparent outline-none font-semibold" aria-label="Trip budget" />
+                <input type="text" inputMode="numeric" placeholder="0" value={budget === 0 ? "" : String(budget)} onChange={(e) => setBudget(Number(e.target.value.replace(/\D/g, "").slice(0, 7)) || 0)} className="w-full bg-transparent outline-none font-semibold" aria-label="Trip budget" />
               </div>
               <div className="mt-2 grid grid-cols-2 rounded-full border border-line p-1 text-sm">
                 {(["per_person", "total"] as BudgetMode[]).map((m) => (
