@@ -1,7 +1,7 @@
 import { cached } from "@/lib/cache";
 import { searchRadiusKm } from "@/lib/geo";
 import { buildItinerary } from "@/lib/itinerary";
-import { fetchPlaces } from "@/lib/providers/osm";
+import { fetchPlaces } from "@/lib/providers/places";
 import { rankPlaces } from "@/lib/scoring";
 import { parseExploreQuery } from "@/lib/validate";
 import type { ExploreResponse } from "@/lib/types";

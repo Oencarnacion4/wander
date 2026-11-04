@@ -13,7 +13,7 @@ This file tracks scope, architecture and progress. Update the checkboxes as feat
 | Framework | **Next.js 16 (App Router) + TypeScript** | One codebase for pages and API routes; easy deploy to Vercel. |
 | Styling | **Tailwind CSS v4** | Fast, consistent design tokens (see `src/app/globals.css`). |
 | Database + auth | **Supabase** (Postgres + Auth + Row-Level Security) | Free tier, real SQL, email/password sign-in. RLS means users can only ever read their own rows. |
-| Places | **OpenStreetMap via Overpass API** | Free, no key, worldwide, real businesses with opening hours. |
+| Places | **OpenStreetMap data via Geoapify Places API** (free key), with the public **Overpass API** as a no-key backup | Real businesses with opening hours, worldwide. Geoapify is fast and reliable; Overpass is free but often overloaded. |
 | Geocoding | **OpenStreetMap Nominatim** | Free, no key. |
 | Maps | **Leaflet + CARTO/OSM tiles** | Free, no key, interactive. |
 | Photos | **Wikipedia REST API** (Wikimedia Commons images) | Real photos of cities and landmarks, free, no key. Falls back to a gradient — never a fake image. |

@@ -16,8 +16,8 @@ export const USER_AGENT = `WANDER/0.1 (student project${process.env.CONTACT_EMAI
 
 /** Overpass selectors per interest. Food uses a tighter radius since restaurants are dense. */
 const SELECTORS: Record<Interest, string[]> = {
-  food: ['nwr["amenity"~"^(restaurant|fast_food|food_court)$"]', 'nwr["amenity"="ice_cream"]'],
-  coffee: ['nwr["amenity"="cafe"]', 'nwr["amenity"="ice_cream"]', 'nwr["shop"~"^(pastry|confectionery|chocolate)$"]'],
+  food: ['nw["amenity"~"^(restaurant|fast_food|food_court)$"]', 'nw["amenity"="ice_cream"]'],
+  coffee: ['nw["amenity"="cafe"]', 'nw["amenity"="ice_cream"]', 'nw["shop"~"^(pastry|confectionery|chocolate)$"]'],
   outdoors: ['nwr["leisure"~"^(park|garden|nature_reserve)$"]', 'nwr["natural"="beach"]', 'nwr["tourism"="viewpoint"]', 'nwr["leisure"="playground"]'],
   museums: ['nwr["tourism"~"^(museum|gallery)$"]', 'nwr["amenity"="arts_centre"]'],
   sights: ['nwr["tourism"~"^(attraction|viewpoint)$"]', 'nwr["historic"~"^(monument|castle|fort|ruins|ship|battlefield|lighthouse)$"]'],
@@ -27,8 +27,8 @@ const SELECTORS: Record<Interest, string[]> = {
     'nwr["tourism"~"^(zoo|aquarium|theme_park)$"]',
   ],
   sports: ['nwr["leisure"~"^(sports_centre|stadium|ice_rink|golf_course|bowling_alley)$"]', 'nwr["sport"="climbing"]["leisure"]'],
-  shopping: ['nwr["shop"~"^(mall|department_store|books|gift|toys|antiques|art|second_hand|music)$"]', 'nwr["amenity"="marketplace"]'],
-  nightlife: ['nwr["amenity"~"^(bar|pub|nightclub|biergarten)$"]'],
+  shopping: ['nw["shop"~"^(mall|department_store|books|gift|toys|antiques|art|second_hand|music)$"]', 'nw["amenity"="marketplace"]'],
+  nightlife: ['nw["amenity"~"^(bar|pub|nightclub|biergarten)$"]'],
 };
 
 /** A lat/lng box around a point. Box queries are much faster for Overpass than radius ("around") queries. */
@@ -54,7 +54,7 @@ export function buildOverpassQuery(lat: number, lng: number, radiusKm: number, i
     const box = DENSE.includes(k) ? near : wide;
     for (const sel of SELECTORS[k]) lines.push(`${sel}["name"](${box});`);
   }
-  return `[out:json][timeout:25];(\n${lines.join("\n")}\n);out center tags 1500;`;
+  return `[out:json][timeout:15];(\n${lines.join("\n")}\n);out center tags 1500;`;
 }
 
 type Tags = Record<string, string>;
@@ -104,7 +104,7 @@ export function classify(t: Tags): { category: CategoryKey; kind: string } | nul
   return null;
 }
 
-interface OverpassElement {
+export interface OverpassElement {
   type: "node" | "way" | "relation";
   id: number;
   lat?: number;
@@ -145,12 +145,12 @@ export function normalize(el: OverpassElement): Place | null {
   };
 }
 
-async function runQuery(url: string, query: string): Promise<OverpassElement[]> {
+async function runQuery(url: string, query: string, timeoutMs: number): Promise<OverpassElement[]> {
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded", "User-Agent": USER_AGENT },
     body: "data=" + encodeURIComponent(query),
-    signal: AbortSignal.timeout(30000),
+    signal: AbortSignal.timeout(timeoutMs),
   });
   if (!res.ok) throw new Error(`Overpass ${res.status}`);
   const json = (await res.json()) as { elements?: OverpassElement[]; remark?: string };
@@ -159,33 +159,42 @@ async function runQuery(url: string, query: string): Promise<OverpassElement[]> 
   return json.elements;
 }
 
-export async function fetchPlaces(lat: number, lng: number, radiusKm: number, interests: Interest[]): Promise<Place[]> {
-  // Free public servers get busy. Try each mirror; if they all struggle, retry with a smaller area.
-  const attempts: { url: string; km: number }[] = [
-    ...OVERPASS_ENDPOINTS.map((url) => ({ url, km: radiusKm })),
-    ...OVERPASS_ENDPOINTS.slice(0, 2).map((url) => ({ url, km: Math.max(1, radiusKm * 0.5) })),
-  ];
-  let lastError: unknown;
-  for (const { url, km } of attempts) {
-    try {
-      const elements = await runQuery(url, buildOverpassQuery(lat, lng, km, interests));
-      const seen = new Set<string>();
-      const places: Place[] = [];
-      for (const el of elements) {
-        const p = normalize(el);
-        if (!p) continue;
-        // Boxes have corners; keep only places inside the circle.
-        if (haversineKm(lat, lng, p.lat, p.lng) > km * 1.05) continue;
-        // The same business is sometimes mapped twice (node + building); dedupe by name + rough location.
-        const key = `${p.name.toLowerCase()}|${p.lat.toFixed(3)}|${p.lng.toFixed(3)}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        places.push(p);
-      }
-      return places;
-    } catch (e) {
-      lastError = e;
-    }
+function toPlaces(elements: OverpassElement[], lat: number, lng: number, km: number): Place[] {
+  const seen = new Set<string>();
+  const places: Place[] = [];
+  for (const el of elements) {
+    const p = normalize(el);
+    if (!p) continue;
+    // Boxes have corners; keep only places inside the circle.
+    if (haversineKm(lat, lng, p.lat, p.lng) > km * 1.05) continue;
+    // The same business is sometimes mapped twice (node + building); dedupe by name + rough location.
+    const key = `${p.name.toLowerCase()}|${p.lat.toFixed(3)}|${p.lng.toFixed(3)}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    places.push(p);
   }
-  throw new Error(`The free OpenStreetMap servers are busy right now (${String(lastError).replace(/^Error: /, "")}). Please try again in a minute.`);
+  return places;
+}
+
+/**
+ * Free public Overpass servers. Used when no Geoapify key is set, or as a backup.
+ * Round 1 asks two mirrors at once and takes whichever answers first.
+ * Round 2 retries a smaller area on the remaining mirror. Worst case ~30 s.
+ */
+export async function fetchOverpass(lat: number, lng: number, radiusKm: number, interests: Interest[]): Promise<Place[]> {
+  const [a, b, c] = OVERPASS_ENDPOINTS;
+  const full = buildOverpassQuery(lat, lng, radiusKm, interests);
+  try {
+    const elements = await Promise.any([a, b].filter(Boolean).map((url) => runQuery(url, full, 15000)));
+    return toPlaces(elements, lat, lng, radiusKm);
+  } catch {
+    /* both busy: try a smaller area */
+  }
+  const km = Math.max(1, radiusKm * 0.5);
+  try {
+    const elements = await runQuery(c ?? a, buildOverpassQuery(lat, lng, km, interests), 15000);
+    return toPlaces(elements, lat, lng, km);
+  } catch (e) {
+    throw new Error(`The free OpenStreetMap servers are busy right now (${String(e).replace(/^Error: /, "")}). Please try again in a minute.`);
+  }
 }

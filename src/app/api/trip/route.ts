@@ -1,6 +1,6 @@
 import { cached } from "@/lib/cache";
 import { buildItinerary } from "@/lib/itinerary";
-import { fetchPlaces } from "@/lib/providers/osm";
+import { fetchPlaces } from "@/lib/providers/places";
 import { rankPlaces } from "@/lib/scoring";
 import type { ExploreQuery, Interest, Itinerary, ScoredPlace, Transport } from "@/lib/types";
 
