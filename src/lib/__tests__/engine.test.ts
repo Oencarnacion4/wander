@@ -133,3 +133,31 @@ describe("event venues", () => {
     expect(estimateCost(stadium, q2)).toMatchObject({ confidence: "unknown" });
   });
 });
+
+describe("meals make sense", () => {
+  const q3 = { ...q, startMinutes: 12 * 60 + 30, durationMinutes: 4 * 60, children: [], budget: 200, interests: ["food" as const, "outdoors" as const] };
+  const places = [
+    place("thai", "restaurant", 0.003, { openingHours: "Mo-Su 11:00-22:00" }),
+    place("sub", "fast_food", 0.004, { openingHours: "Mo-Su 08:00-22:00" }),
+    place("tacos", "fast_food", 0.005, { openingHours: "Mo-Su 08:00-22:00" }),
+    place("gardens", "garden", 0.006, { openingHours: "Mo-Su 08:00-20:00" }),
+    place("ice", "dessert", 0.004, { openingHours: "Mo-Su 12:00-22:00" }),
+  ];
+  const { scored } = rankPlaces(places, q3);
+  const plan = buildItinerary(scored, q3);
+  const byId = new Map(scored.map((s) => [s.place.id, s]));
+  const meals = plan.stops.filter((s) => ["restaurant", "fast_food"].includes(byId.get(s.placeId)!.place.category));
+  it("has at most one meal in an afternoon outing, at a meal time", () => {
+    expect(meals.length).toBeLessThanOrEqual(1);
+    for (const m of meals) expect(m.arrive).toBeLessThanOrEqual(14 * 60 + 30);
+  });
+  it("won't offer a second lunch as a swap", () => {
+    const ids = plan.stops.map((s) => s.placeId);
+    const nonMeal = plan.stops.findIndex((s) => !meals.includes(s));
+    if (meals.length && nonMeal >= 0) {
+      const opts = swapOptions(ids, nonMeal, scored, q3, 10);
+      const offered = opts.map((o) => byId.get(o.candidate.place.id)!.place.category);
+      expect(offered).not.toContain("fast_food");
+    }
+  });
+});

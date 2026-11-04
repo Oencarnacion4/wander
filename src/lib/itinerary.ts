@@ -17,8 +17,27 @@ const EXPANSIONS_PER_STATE = 10;
 const CANDIDATE_POOL = 60;
 const MAX_WAIT_MIN = 30; // we'll wait up to 30 min for a place to open
 const REPEAT_CATEGORY_PENALTY = 0.14;
-const LUNCH: [number, number] = [11 * 60 + 15, 14 * 60];
-const DINNER: [number, number] = [17 * 60 + 15, 20 * 60 + 30];
+/**
+ * Meals follow how people actually eat: only at meal times, one per meal
+ * window, and at least 4 hours apart. Cafés and dessert aren't meals, so
+ * they can still follow lunch.
+ */
+const MEAL_WINDOWS: { name: string; range: [number, number] }[] = [
+  { name: "breakfast", range: [7 * 60, 10 * 60 + 30] },
+  { name: "lunch", range: [11 * 60, 14 * 60 + 30] },
+  { name: "dinner", range: [17 * 60, 21 * 60 + 30] },
+];
+const MIN_MINUTES_BETWEEN_MEALS = 240;
+
+export function mealWindow(t: number): string | null {
+  return MEAL_WINDOWS.find(({ range: [a, b] }) => t >= a && t <= b)?.name ?? null;
+}
+
+/** How many meals an outing can include: one per meal window it really overlaps (45+ minutes). */
+export function maxMeals(start: number, duration: number): number {
+  const end = start + duration;
+  return MEAL_WINDOWS.filter(({ range: [a, b] }) => Math.min(end, b) - Math.max(start, a) >= 45).length;
+}
 
 interface State {
   stops: ItineraryStop[];
@@ -30,12 +49,8 @@ interface State {
   costHigh: number;
   used: Set<string>;
   catCount: Map<string, number>;
-  lastMealAt: number | null;
+  meals: { at: number; window: string }[];
   objective: number;
-}
-
-function inWindow(t: number, [a, b]: [number, number]) {
-  return t >= a && t <= b;
 }
 
 function addCost(a: CostEstimate, rideshare: number): CostEstimate {
@@ -75,16 +90,19 @@ function tryNext(state: State, c: ScoredPlace, q: ExploreQuery, budget: number) 
   const mid = (cost.low + cost.high) / 2;
   if (state.costLow + cost.low > budget || state.costMid + mid > budget * 1.1) return null;
 
-  // Meals: at most one per meal window, never two meals within 2.5 hours.
-  if (cat.meal && state.lastMealAt !== null && arrive - state.lastMealAt < 150) return null;
+  if (cat.meal) {
+    const w = mealWindow(arrive);
+    if (!w) return null; // no sit-down meals at 3:30pm
+    if (state.meals.length >= maxMeals(q.startMinutes, q.durationMinutes)) return null;
+    if (state.meals.some((m) => m.window === w || arrive - m.at < MIN_MINUTES_BETWEEN_MEALS)) return null;
+  }
 
   // Value of a stop: its score, discounted for travel, and scaled so that
   // substantial visits count more than quick hops (avoids 8 tiny stops).
   let gain = c.score * Math.exp(-travel / 25) * (0.55 + 0.45 * Math.min(1, c.durationMinutes / 90));
   gain -= (state.catCount.get(c.place.category) ?? 0) * REPEAT_CATEGORY_PENALTY;
-  if (cat.meal && c.place.category === "restaurant") {
-    gain += inWindow(arrive, LUNCH) || inWindow(arrive, DINNER) ? 0.12 : -0.15;
-  }
+  // Eating at mealtime is part of a good day out.
+  if (cat.meal) gain += c.place.category === "restaurant" ? 0.12 : 0.06;
   // Time spent waiting is wasted time.
   gain -= (arrive - state.t - travel) * 0.002;
   if (gain <= 0) return null;
@@ -107,7 +125,7 @@ export function buildItinerary(candidates: ScoredPlace[], q: ExploreQuery): Itin
     costHigh: 0,
     used: new Set(),
     catCount: new Map(),
-    lastMealAt: null,
+    meals: [],
     objective: 0,
   };
   let beam: State[] = [start];
@@ -135,7 +153,7 @@ export function buildItinerary(candidates: ScoredPlace[], q: ExploreQuery): Itin
           costHigh: s.costHigh + r.stop.cost.high,
           used: new Set([...s.used, c.place.id]),
           catCount,
-          lastMealAt: CATEGORIES[c.place.category].meal ? r.stop.arrive : s.lastMealAt,
+          meals: CATEGORIES[c.place.category].meal ? [...s.meals, { at: r.stop.arrive, window: mealWindow(r.stop.arrive) ?? "" }] : s.meals,
           objective: s.objective + r.gain,
         });
       }
@@ -205,6 +223,12 @@ export function retime(placeIds: string[], byId: Map<string, ScoredPlace>, q: Ex
     t = depart;
     lat = c.place.lat;
     lng = c.place.lng;
+  }
+  const meals = stops.filter((st) => CATEGORIES[byId.get(st.placeId)!.place.category].meal);
+  for (let i = 1; i < meals.length; i++) {
+    if (meals[i].arrive - meals[i - 1].arrive < MIN_MINUTES_BETWEEN_MEALS) {
+      notes.push(`${byId.get(meals[i - 1].placeId)!.place.name} and ${byId.get(meals[i].placeId)!.place.name} are two meals close together.`);
+    }
   }
   if (t > end) notes.push(`This plan runs ${t - end} minutes past your end time.`);
   if (low > budget) notes.push("This plan is likely over your budget.");
