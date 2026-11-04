@@ -2,7 +2,7 @@
 
 import { ChevronDown, Clock, MapPin, Repeat, Shuffle, Trash2, TriangleAlert } from "lucide-react";
 import { useState } from "react";
-import { ConfidenceBadge, money } from "@/components/Badges";
+import { ConfidenceBadge, costLabel } from "@/components/Badges";
 import { fmtTime } from "@/lib/hours";
 import { TRANSPORT } from "@/lib/geo";
 import type { ItineraryStop, ScoredPlace, Transport } from "@/lib/types";
@@ -67,7 +67,7 @@ export function StopCard({
             </p>
           </div>
           <div className="text-right shrink-0">
-            <p className="font-display text-lg font-bold">{money(stop.cost.low, stop.cost.high)}</p>
+            <p className="font-display text-lg font-bold">{costLabel(stop.cost)}</p>
             <ConfidenceBadge c={stop.cost.confidence} title={stop.cost.note} />
           </div>
         </div>

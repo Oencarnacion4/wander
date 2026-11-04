@@ -1,7 +1,7 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { ConfidenceBadge, money } from "@/components/Badges";
+import { ConfidenceBadge, costLabel } from "@/components/Badges";
 import type { ScoredPlace } from "@/lib/types";
 import { cn } from "@/lib/cn";
 import { PlaceActions } from "./PlaceActions";
@@ -43,7 +43,7 @@ export function IdeaCard({
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-soft">
         <span className="inline-flex items-center gap-1">
-          {money(c.cost.low, c.cost.high)} <ConfidenceBadge c={c.cost.confidence} title={c.cost.note} />
+          {costLabel(c.cost)} <ConfidenceBadge c={c.cost.confidence} title={c.cost.note} />
         </span>
         <span className="inline-flex items-center gap-1">
           <ConfidenceBadge c={c.hours.confidence} /> <span className="truncate max-w-56">{c.hours.label}</span>

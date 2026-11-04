@@ -115,6 +115,7 @@ All tables have Row-Level Security: `auth.uid() = user_id`.
 - [x] Unit tests for the engine (14) + browser end-to-end test of every main flow
 
 ### Stage 2 — Better data (next)
+- [ ] **Live events (Ticketmaster Discovery API, free key):** real games, concerts and shows during your time window, with venue, start time and listed price range. Event venues (stadiums, theaters) are already kept out of auto-generated plans until this lands.
 - [ ] **Google Places API (optional key)** as a second provider: ratings, `priceLevel`, photos → more *confirmed* prices and a real popularity feature
 - [ ] Real routing times (OSRM or Google Routes) instead of the distance × detour estimate
 - [ ] Reorder stops by drag-and-drop

@@ -23,6 +23,8 @@ export interface CategoryInfo {
   timeOfDay: [number, number, number];
   /** Is this a meal stop? Used to keep the itinerary to one meal per meal window. */
   meal?: boolean;
+  /** Only worth a trip when an event is on (a game, a show). Never auto-added to plans. */
+  eventOnly?: boolean;
   icon: string;
 }
 
@@ -47,14 +49,14 @@ export const CATEGORIES: Record<CategoryKey, CategoryInfo> = {
   aquarium: { label: "Aquarium", interests: ["entertainment", "sights", "museums"], duration: 120, cost: [20, 40], childCostFactor: 0.7, kidsYoung: 1, kidsOlder: 1, timeOfDay: [1, 1, 0.3], icon: "fish" },
   theme_park: { label: "Theme park", interests: ["entertainment"], duration: 240, cost: [40, 110], childCostFactor: 0.85, kidsYoung: 0.8, kidsOlder: 1, timeOfDay: [1, 1, 0.5], icon: "ferris-wheel" },
   cinema: { label: "Movie theater", interests: ["entertainment"], duration: 140, cost: [11, 18], childCostFactor: 0.75, kidsYoung: 0.5, kidsOlder: 0.9, timeOfDay: [0.3, 0.9, 1], icon: "clapperboard" },
-  theatre: { label: "Theater", interests: ["entertainment", "museums"], duration: 150, cost: [25, 80], childCostFactor: 0.8, kidsYoung: 0.3, kidsOlder: 0.6, timeOfDay: [0.1, 0.6, 1], icon: "drama" },
+  theatre: { label: "Theater", interests: ["entertainment", "museums"], duration: 150, cost: [25, 80], childCostFactor: 0.8, kidsYoung: 0.3, kidsOlder: 0.6, timeOfDay: [0.1, 0.6, 1], eventOnly: true, icon: "drama" },
   bowling: { label: "Bowling alley", interests: ["entertainment", "sports"], duration: 90, cost: [12, 25], childCostFactor: 0.8, kidsYoung: 0.7, kidsOlder: 1, timeOfDay: [0.4, 1, 1], icon: "circle-dot" },
   arcade: { label: "Arcade", interests: ["entertainment"], duration: 75, cost: [10, 30], childCostFactor: 1, kidsYoung: 0.7, kidsOlder: 1, timeOfDay: [0.4, 1, 1], icon: "gamepad-2" },
   minigolf: { label: "Mini golf", interests: ["entertainment", "sports", "outdoors"], duration: 60, cost: [8, 16], childCostFactor: 0.8, kidsYoung: 0.8, kidsOlder: 1, timeOfDay: [0.6, 1, 0.8], icon: "flag" },
   escape_room: { label: "Escape room", interests: ["entertainment"], duration: 75, cost: [25, 40], childCostFactor: 1, kidsYoung: 0, kidsOlder: 0.6, timeOfDay: [0.4, 1, 1], icon: "key-round" },
   trampoline: { label: "Trampoline park", interests: ["entertainment", "sports"], duration: 90, cost: [15, 28], childCostFactor: 1, kidsYoung: 0.6, kidsOlder: 1, timeOfDay: [0.7, 1, 0.7], icon: "rocket" },
   sports_centre: { label: "Sports & recreation", interests: ["sports"], duration: 90, cost: [0, 20], childCostFactor: 0.7, kidsYoung: 0.5, kidsOlder: 0.8, timeOfDay: [1, 1, 0.8], icon: "dumbbell" },
-  stadium: { label: "Stadium", interests: ["sports", "sights"], duration: 45, cost: [0, 0], childCostFactor: 0, kidsYoung: 0.6, kidsOlder: 0.8, timeOfDay: [0.8, 1, 0.8], icon: "trophy" },
+  stadium: { label: "Stadium", interests: ["sports", "sights"], duration: 150, cost: [0, 0], childCostFactor: 0, kidsYoung: 0.6, kidsOlder: 0.8, timeOfDay: [0.8, 1, 0.8], eventOnly: true, icon: "trophy" },
   ice_rink: { label: "Ice rink", interests: ["sports", "entertainment"], duration: 75, cost: [10, 20], childCostFactor: 0.8, kidsYoung: 0.5, kidsOlder: 1, timeOfDay: [0.6, 1, 0.9], icon: "snowflake" },
   climbing: { label: "Climbing gym", interests: ["sports"], duration: 100, cost: [18, 30], childCostFactor: 0.8, kidsYoung: 0.2, kidsOlder: 0.8, timeOfDay: [0.8, 1, 0.9], icon: "mountain-snow" },
   golf: { label: "Golf course", interests: ["sports", "outdoors"], duration: 180, cost: [25, 80], childCostFactor: 0.7, kidsYoung: 0.1, kidsOlder: 0.5, timeOfDay: [1, 0.9, 0.2], icon: "flag-triangle-right" },

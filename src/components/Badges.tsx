@@ -22,6 +22,12 @@ export function ConfidenceBadge({ c, title, className }: { c: Confidence; title?
   );
 }
 
+/** Price label for one place. Unknown prices say "Varies" instead of pretending to be free. */
+export function costLabel(c: { low: number; high: number; confidence: Confidence }) {
+  if (c.confidence === "unknown" && c.high === 0) return "Varies";
+  return money(c.low, c.high);
+}
+
 export function money(low: number, high: number) {
   if (high === 0) return "Free";
   if (low === high) return `$${low}`;

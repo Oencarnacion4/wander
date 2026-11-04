@@ -118,3 +118,18 @@ describe("OpenStreetMap normalisation", () => {
     expect(normalize({ type: "way", id: 7, center: { lat: 1, lon: 2 }, tags: { leisure: "park", name: "P", fee: "no", wikidata: "Q1" } })).toMatchObject({ id: "osm:way/7", fee: "free", notable: true });
   });
 });
+
+describe("event venues", () => {
+  const stadium = place("stadium", "stadium", 0.002, { notable: true });
+  const park = place("park2", "park", 0.004, { openingHours: "Mo-Su 06:00-21:00" });
+  const q2 = { ...q, children: [], interests: ["sports" as const, "outdoors" as const] };
+  it("never auto-adds a stadium to a plan, but still lists it as an idea", () => {
+    const { scored } = rankPlaces([stadium, park], q2);
+    expect(scored.some((s) => s.place.id === "stadium")).toBe(true);
+    const plan = buildItinerary(scored, q2);
+    expect(plan.stops.map((s) => s.placeId)).not.toContain("stadium");
+  });
+  it("says ticket prices are unknown instead of free", () => {
+    expect(estimateCost(stadium, q2)).toMatchObject({ confidence: "unknown" });
+  });
+});

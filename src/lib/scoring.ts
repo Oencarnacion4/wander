@@ -54,6 +54,9 @@ export function totalBudget(q: Pick<ExploreQuery, "budget" | "budgetMode" | "adu
 /** Cost for the whole group. Uses the source's fee tag when present; otherwise the category's typical range. */
 export function estimateCost(place: Place, q: Pick<ExploreQuery, "adults" | "children">): CostEstimate {
   const cat = CATEGORIES[place.category];
+  if (cat.eventOnly) {
+    return { low: 0, high: 0, confidence: "unknown", note: "Ticket prices depend on the event" };
+  }
   if (place.fee === "free") {
     return { low: 0, high: 0, confidence: "confirmed", note: "Free entry (listed on OpenStreetMap)" };
   }
@@ -205,6 +208,7 @@ export function scorePlace(place: Place, q: ExploreQuery): { scored?: ScoredPlac
 
   const warnings: string[] = [];
   if (open === "unknown") warnings.push("Opening hours not confirmed");
+  if (CATEGORIES[place.category].eventOnly) warnings.push("Event venue — only worth it when something's on");
   if (q.visited?.[place.id]) warnings.push(`You've been here (last ${q.visited[place.id]})`);
 
   return {

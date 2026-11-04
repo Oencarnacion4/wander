@@ -3,7 +3,7 @@
 import { BookmarkPlus, Car, Check, Dices, Loader2, Minus, Plane, Plus, Stamp, Sun, TrainFront, X } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useMemo, useRef, useState } from "react";
-import { ConfidenceBadge, money } from "@/components/Badges";
+import { ConfidenceBadge, costLabel, money } from "@/components/Badges";
 import { LocationPicker, type PickedLocation } from "@/components/LocationPicker";
 import { Photo } from "@/components/Photo";
 import { useWander } from "@/components/WanderProvider";
@@ -440,7 +440,7 @@ export default function SomewherePage() {
                                     <span className="text-muted"> · {c.place.kind}</span>
                                   </span>
                                   <span className="shrink-0 text-xs inline-flex items-center gap-1">
-                                    {money(s.cost.low, s.cost.high)} <ConfidenceBadge c={s.cost.confidence} />
+                                    {costLabel(s.cost)} <ConfidenceBadge c={s.cost.confidence} />
                                   </span>
                                 </li>
                               );

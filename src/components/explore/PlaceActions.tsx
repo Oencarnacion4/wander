@@ -1,9 +1,10 @@
 "use client";
 
-import { Check, ExternalLink, Heart, Navigation } from "lucide-react";
+import { CalendarSearch, Check, ExternalLink, Heart, Navigation } from "lucide-react";
 import { useState } from "react";
 import { useWander } from "@/components/WanderProvider";
 import type { PlaceSnapshot } from "@/lib/store-types";
+import { CATEGORIES } from "@/lib/categories";
 import type { Place } from "@/lib/types";
 import { cn } from "@/lib/cn";
 
@@ -45,6 +46,11 @@ export function PlaceActions({ place, city, compact = false }: { place: Place; c
       {!compact && (
         <a className={btn} href={directionsUrl(place)} target="_blank" rel="noreferrer">
           <Navigation className="size-3.5" /> Directions
+        </a>
+      )}
+      {CATEGORIES[place.category].eventOnly && (
+        <a className={cn(btn, "border-plum/40 text-plum")} href={`https://www.google.com/search?q=${encodeURIComponent(`${place.name} ${city ?? ""} events schedule`)}`} target="_blank" rel="noreferrer">
+          <CalendarSearch className="size-3.5" /> See what&apos;s on
         </a>
       )}
       {!compact && place.website && (

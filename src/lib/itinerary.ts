@@ -95,7 +95,8 @@ function tryNext(state: State, c: ScoredPlace, q: ExploreQuery, budget: number) 
 
 export function buildItinerary(candidates: ScoredPlace[], q: ExploreQuery): Itinerary {
   const budget = totalBudget(q);
-  const pool = candidates.slice(0, CANDIDATE_POOL);
+  // Event venues (stadiums, theaters) are never auto-added: without a scheduled event there is nothing to do there.
+  const pool = candidates.filter((c) => !CATEGORIES[c.place.category].eventOnly).slice(0, CANDIDATE_POOL);
   const start: State = {
     stops: [],
     t: q.startMinutes,
@@ -218,7 +219,7 @@ export function swapOptions(placeIds: string[], index: number, candidates: Score
   const inPlan = new Set(placeIds);
   const out: { candidate: ScoredPlace; itinerary: Itinerary }[] = [];
   for (const c of candidates) {
-    if (inPlan.has(c.place.id)) continue;
+    if (inPlan.has(c.place.id) || CATEGORIES[c.place.category].eventOnly) continue;
     const ids = [...placeIds];
     ids[index] = c.place.id;
     const it = retime(ids, byId, q);
