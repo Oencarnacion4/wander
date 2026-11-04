@@ -67,8 +67,9 @@ export default function MapView({
   return (
     <MapContainer center={center} zoom={points.length ? 13 : 4} scrollWheelZoom className={className} style={{ height: "100%", width: "100%" }}>
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+        attribution='Powered by <a href="https://www.geoapify.com/">Geoapify</a> | &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="/api/tiles/{z}/{x}/{y}{r}.png"
+        maxZoom={19}
       />
       {route && route.length > 1 && <Polyline positions={route} pathOptions={{ color: "#8b3d81", weight: 3, dashArray: "6 8", opacity: 0.8 }} />}
       {points.map((p) => (
