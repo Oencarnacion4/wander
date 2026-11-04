@@ -144,7 +144,7 @@ export function LocationPicker({
       </div>
       {error && <p className="mt-2 text-sm text-orchid-dark">{error}</p>}
       {results && results.length > 0 && (
-        <ul className="absolute z-[1200] mt-2 w-full rounded-2xl border border-line bg-card shadow-lift overflow-hidden">
+        <ul className="relative mt-2 w-full rounded-2xl border border-line bg-card shadow-card overflow-hidden">
           {results.map((r, i) => (
             <li key={i}>
               <button

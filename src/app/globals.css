@@ -65,6 +65,10 @@ a:active {
   outline: 2px solid var(--color-orchid);
   outline-offset: 2px;
 }
+/* Text boxes sit inside a container that already shows a focus ring. */
+[class*="focus-within:ring"] input:focus-visible {
+  outline: none;
+}
 
 /* Gentle wave pattern behind dark plum sections. */
 .topo {
