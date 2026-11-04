@@ -113,6 +113,7 @@ All tables have Row-Level Security: `auth.uid() = user_id`.
 - [x] Home Base: set/move/clear; explore elsewhere without changing it
 - [x] Accounts (Supabase email/password) + guest mode with auto-upload on sign-in
 - [x] My Adventures: visit history with repeat visits, wishlist, saved plans, cities explored, personal map
+- [x] Cheapest flights: nearest airports to any location, cheapest recent fares to anywhere (Travelpayouts/Aviasales data, labeled with when each fare was found), Google Flights link for live prices, and a day-by-day plan for the flight dates
 - [x] Take Me Somewhere: 72 real destinations (US + international), travel/cost model, Surprise Me, multi-day itinerary from live data, save trip
 - [x] Unit tests for the engine (14) + browser end-to-end test of every main flow
 

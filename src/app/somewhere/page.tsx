@@ -16,6 +16,7 @@ import { MODE_LABELS, TRIP_LABELS, TRIP_WEIGHTS, rankDestinations, surprisePick,
 import type { BudgetMode } from "@/lib/types";
 import type { TripResponse } from "@/app/api/trip/route";
 import { cn } from "@/lib/cn";
+import { CheapFlights } from "@/components/flights/CheapFlights";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false, loading: () => <div className="size-full bg-sand" /> });
 
@@ -55,6 +56,7 @@ export default function SomewherePage() {
   const [modes, setModes] = useState<TripMode[]>(["drive", "fly"]);
   const [maxHours, setMaxHours] = useState(6);
   const [scope, setScope] = useState<"domestic" | "anywhere">("anywhere");
+  const [mode, setMode] = useState<"places" | "flights">("places");
   const [vibes, setVibes] = useState<DestTag[]>(["food", "outdoors"]);
   const [submitted, setSubmitted] = useState<TripQuery | null>(null);
   const [selected, setSelected] = useState<ScoredDestination | null>(null);
@@ -181,14 +183,34 @@ export default function SomewherePage() {
       <section className="relative">
         <Photo title="Santorini" className="h-[300px] md:h-[360px]" fallbackHue={205}>
           <div className="absolute inset-0 bg-gradient-to-t from-plum-dark/90 via-plum-dark/40 to-plum-dark/20" />
-          <div className="relative h-full mx-auto max-w-7xl px-4 md:px-6 flex flex-col justify-end pb-24">
+          <div className="relative h-full mx-auto max-w-7xl px-4 md:px-6 flex flex-col justify-end pb-20">
             <p className="text-lilac font-semibold text-sm tracking-widest uppercase">Take Me Somewhere</p>
             <h1 className="font-display text-white text-4xl md:text-6xl font-extrabold mt-1 max-w-3xl leading-[1.02]">Somewhere new. We&apos;ll figure out where.</h1>
+            <div className="mt-5 inline-flex w-fit rounded-full bg-white/15 backdrop-blur p-1 text-sm" role="tablist">
+              {([
+                ["places", "Find a destination"],
+                ["flights", "Cheapest flights"],
+              ] as const).map(([k, label]) => (
+                <button
+                  key={k}
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === k}
+                  onClick={() => setMode(k)}
+                  className={cn("rounded-full px-4 py-2 font-semibold", mode === k ? "bg-white text-plum" : "text-white/85 hover:text-white")}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
           </div>
         </Photo>
       </section>
 
       <div className="mx-auto max-w-7xl px-4 md:px-6 -mt-16 relative">
+        {mode === "flights" ? (
+          <CheapFlights />
+        ) : (
         <form onSubmit={submit} className="rounded-[28px] bg-card border border-line shadow-lift p-5 md:p-7 space-y-6">
           <div className="grid md:grid-cols-2 gap-5">
             <div>
@@ -324,9 +346,10 @@ export default function SomewherePage() {
             Find destinations
           </button>
         </form>
+        )}
       </div>
 
-      {ranked && submitted && (
+      {mode === "places" && ranked && submitted && (
         <div className="mx-auto max-w-7xl px-4 md:px-6 mt-10">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>

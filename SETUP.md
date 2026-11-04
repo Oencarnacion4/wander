@@ -34,7 +34,20 @@ Without a key, WANDER uses the free public OpenStreetMap servers. They are often
 
 The free plan includes 3,000 credits a day. One search uses about 15–30, and repeat searches within 30 minutes are cached.
 
-## 3. Turn on accounts with Supabase (free, about 10 minutes)
+## 3. Turn on Cheapest flights (free, about 5 minutes)
+
+Take Me Somewhere → **Cheapest flights** lists the cheapest fares from the airports near any location, to anywhere. Prices are real fares that Aviasales users found recently (each card says how long ago), and **Check price** opens Google Flights for the live price.
+
+1. Sign up free at https://www.travelpayouts.com.
+2. In the dashboard, open **Programs**, find **Aviasales**, and click **Join** (approval is instant for the data API).
+3. Copy your API token from **Profile → API token** (https://app.travelpayouts.com/profile/api-token).
+4. Add it to `.env.local`:
+   ```
+   TRAVELPAYOUTS_TOKEN=your-token
+   ```
+5. Restart `npm run dev`.
+
+## 4. Turn on accounts with Supabase (free, about 10 minutes)
 
 1. Go to https://supabase.com, sign up, and click **New project**. Pick any name and a database password, and choose the region closest to you.
 2. When the project is ready, open **SQL Editor → New query**. Paste the whole contents of `supabase/migrations/0001_init.sql` and click **Run**. This creates the tables and security rules.
@@ -49,10 +62,11 @@ The free plan includes 3,000 credits a day. One search uses about 15–30, and r
 5. Optional, for faster testing: **Authentication → Sign In / Providers → Email** → turn off **Confirm email**, so new accounts can sign in right away.
 6. Restart `npm run dev`. The Home Base page now shows **Sign in / Create account**.
 
-## 4. Optional settings
+## 5. Optional settings
 
 | Variable | What it does |
 |---|---|
+| `TRAVELPAYOUTS_TOKEN` | Cheapest flights (section 3). |
 | `GEOAPIFY_API_KEY` | Fast, reliable place search (section 2). Strongly recommended. |
 | `CONTACT_EMAIL` | Added to the User-Agent sent to OpenStreetMap, which their usage policy asks for. Recommended when you deploy. |
 | `OVERPASS_URLS` | Comma-separated Overpass mirrors, if the defaults are slow. |
@@ -60,7 +74,7 @@ The free plan includes 3,000 credits a day. One search uses about 15–30, and r
 
 Maps, geocoding and photos need no keys. Place search works without a key, but much more reliably with Geoapify.
 
-## 5. Deploy (for the class demo)
+## 6. Deploy (for the class demo)
 
 1. At https://vercel.com, click **Add New → Project** and import the `wander` repo.
 2. Add the same environment variables as `.env.local`, then click **Deploy**.
