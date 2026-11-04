@@ -10,6 +10,7 @@ export async function GET(request: Request) {
     const results = await cached(`geo:${usOnly}:${q.toLowerCase()}`, 86400000, () => geocode(q, { usOnly }));
     return Response.json({ results });
   } catch (e) {
-    return Response.json({ error: `Location search is unavailable right now (${String(e)})` }, { status: 502 });
+    console.error("[wander] location search failed:", String(e));
+    return Response.json({ error: `Location search isn't responding right now (${String(e).replace(/^Error: /, "")}). Try again in a moment.` }, { status: 502 });
   }
 }

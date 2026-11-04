@@ -33,3 +33,13 @@ describe("Geoapify provider", () => {
     expect(u.searchParams.get("apiKey")).toBe("KEY");
   });
 });
+
+import { fromGeoapifyGeocode } from "../providers/geocode";
+describe("Geoapify location search", () => {
+  it("labels US cities with the state code", () => {
+    expect(fromGeoapifyGeocode({ lat: 35.99, lon: -78.9, city: "Durham", state: "North Carolina", state_code: "NC", country: "United States", country_code: "us" })).toMatchObject({ label: "Durham, NC", countryCode: "US", region: "North Carolina" });
+  });
+  it("labels other countries with the country name", () => {
+    expect(fromGeoapifyGeocode({ lat: 38.7, lon: -9.1, city: "Lisbon", state: "Lisbon", country: "Portugal", country_code: "pt" }).label).toBe("Lisbon, Portugal");
+  });
+});
