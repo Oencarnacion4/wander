@@ -161,3 +161,50 @@ describe("meals make sense", () => {
     }
   });
 });
+
+describe("food stops", () => {
+  const qa = { ...q, startMinutes: 11 * 60 + 30, durationMinutes: 4 * 60, children: [], budget: 300, interests: ["food" as const, "coffee" as const, "outdoors" as const] };
+  const places = [
+    place("bakery", "cafe", 0.002, { openingHours: "Mo-Su 07:00-16:00" }),
+    place("cafe2", "cafe", 0.0025, { openingHours: "Mo-Su 07:00-18:00" }),
+    place("lunch", "restaurant", 0.003, { openingHours: "Mo-Su 11:00-22:00" }),
+    place("sub", "fast_food", 0.0035, { openingHours: "Mo-Su 08:00-22:00", brand: "Subway" }),
+    place("icecream", "dessert", 0.004, { openingHours: "Mo-Su 11:00-23:00" }),
+    place("garden", "garden", 0.005, { openingHours: "Mo-Su 08:00-20:00" }),
+    place("park3", "park", 0.006, { openingHours: "Mo-Su 06:00-21:00" }),
+  ];
+  const { scored } = rankPlaces(places, qa);
+  const plan = buildItinerary(scored, qa);
+  const cats = plan.stops.map((s) => scored.find((c) => c.place.id === s.placeId)!.place.category);
+  const food = (c: string) => ["cafe", "dessert", "restaurant", "fast_food"].includes(c);
+  it("never puts two food stops back to back", () => {
+    for (let i = 1; i < cats.length; i++) expect(food(cats[i - 1]) && food(cats[i])).toBe(false);
+  });
+  it("allows only one coffee/dessert stop in a 4-hour outing", () => {
+    expect(cats.filter((c) => c === "cafe" || c === "dessert").length).toBeLessThanOrEqual(1);
+  });
+});
+
+describe("fancy night out", () => {
+  const qf = { ...q, startMinutes: 18 * 60, durationMinutes: 3 * 60, children: [], budget: 150, budgetMode: "per_person" as const, interests: ["food" as const, "sights" as const], dining: "upscale" as const };
+  const steak = place("steak", "restaurant", 0.004, { openingHours: "Mo-Su 17:00-23:00", cuisine: "steak_house", reservation: "recommended", website: "https://example.org" });
+  const chain = place("chain", "restaurant", 0.002, { openingHours: "Mo-Su 11:00-23:00", brand: "Applebee's" });
+  const plain = place("plain", "restaurant", 0.003, { openingHours: "Mo-Su 11:00-23:00" });
+  const sub = place("sub2", "fast_food", 0.001, { openingHours: "Mo-Su 08:00-23:00", brand: "Subway" });
+  const view = place("view", "viewpoint", 0.005);
+  const { scored, excluded } = rankPlaces([steak, chain, plain, sub, view], qf);
+  it("rules out chains and fast food", () => {
+    expect(scored.map((s) => s.place.id)).not.toContain("chain");
+    expect(scored.map((s) => s.place.id)).not.toContain("sub2");
+    expect(excluded.dining_style).toBe(2);
+  });
+  it("ranks the reservation-taking steakhouse above a plain restaurant and plans dinner there", () => {
+    const ids = scored.map((s) => s.place.id);
+    expect(ids.indexOf("steak")).toBeLessThan(ids.indexOf("plain"));
+    expect(buildItinerary(scored, qf).stops.map((s) => s.placeId)).toContain("steak");
+    expect(scored.find((s) => s.place.id === "steak")!.reasons[0]).toMatch(/Likely upscale/);
+  });
+  it("estimates upscale prices, labeled as an estimate", () => {
+    expect(estimateCost(steak, qf)).toMatchObject({ low: 90, high: 220, confidence: "estimated" });
+  });
+});

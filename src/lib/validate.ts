@@ -41,5 +41,6 @@ export function parseExploreQuery(raw: unknown): ExploreQuery {
     interests,
     visited,
     wishlist,
+    dining: (["any", "casual", "sitdown", "upscale"] as const).find((d) => d === b.dining) ?? "any",
   };
 }

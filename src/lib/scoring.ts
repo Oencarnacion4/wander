@@ -1,4 +1,5 @@
 import { CATEGORIES, RELATED_INTERESTS } from "./categories";
+import { isChain, LIKELY_UPSCALE, upscaleScore } from "./dining";
 import { haversineKm, travelMinutes } from "./geo";
 import { hoursStatus, openForVisit } from "./hours";
 import type { CostEstimate, ExploreQuery, Place, ScoreBreakdown, ScoredPlace } from "./types";
@@ -52,7 +53,7 @@ export function totalBudget(q: Pick<ExploreQuery, "budget" | "budgetMode" | "adu
 }
 
 /** Cost for the whole group. Uses the source's fee tag when present; otherwise the category's typical range. */
-export function estimateCost(place: Place, q: Pick<ExploreQuery, "adults" | "children">): CostEstimate {
+export function estimateCost(place: Place, q: Pick<ExploreQuery, "adults" | "children" | "dining">): CostEstimate {
   const cat = CATEGORIES[place.category];
   if (cat.eventOnly) {
     return { low: 0, high: 0, confidence: "unknown", note: "Ticket prices depend on the event" };
@@ -63,15 +64,19 @@ export function estimateCost(place: Place, q: Pick<ExploreQuery, "adults" | "chi
   const payingUnits =
     q.adults +
     q.children.reduce((s, c) => s + (c.age < 3 ? 0 : c.age <= 12 ? cat.childCostFactor : 1), 0);
-  const high = cat.cost[1];
-  let low = cat.cost[0];
+  // Restaurant spend depends on the food style the user asked for.
+  const [baseLow, baseHigh] =
+    place.category === "restaurant" && q.dining === "upscale" ? [45, 110] : place.category === "restaurant" && q.dining === "casual" ? [12, 28] : cat.cost;
+  const high = baseHigh;
+  let low = baseLow;
   if (place.fee === "paid" && low === 0) low = Math.min(5, high || 5);
   const est = { low: Math.round(low * payingUnits), high: Math.round(high * payingUnits) };
   if (est.high === 0) {
     return { ...est, confidence: "estimated", note: `Usually free for a ${cat.label.toLowerCase()}` };
   }
   const listed = place.charge ? ` · listed charge: ${place.charge}` : "";
-  return { ...est, confidence: "estimated", note: `Typical spend for a ${cat.label.toLowerCase()}${listed}` };
+  const kind = place.category === "restaurant" && q.dining === "upscale" ? "upscale restaurant" : cat.label.toLowerCase();
+  return { ...est, confidence: "estimated", note: `Typical spend for a ${kind}${listed}` };
 }
 
 export function visitDuration(place: Place, windowMinutes: number): number | null {
@@ -82,6 +87,21 @@ export function visitDuration(place: Place, windowMinutes: number): number | nul
 }
 
 function interestFeature(place: Place, q: ExploreQuery): number {
+  return baseInterest(place, q) * diningFit(place, q);
+}
+
+/** How well a food place matches the chosen food style (1 = perfect). Exclusions happen in scorePlace. */
+function diningFit(place: Place, q: ExploreQuery): number {
+  const dining = q.dining ?? "any";
+  if (place.category !== "restaurant") return 1;
+  const up = upscaleScore(place);
+  if (dining === "upscale") return 0.35 + 0.65 * up;
+  if (dining === "casual") return up >= LIKELY_UPSCALE ? 0.6 : 1;
+  if (dining === "sitdown") return isChain(place) ? 0.85 : 1;
+  return 1;
+}
+
+function baseInterest(place: Place, q: ExploreQuery): number {
   if (q.interests.length === 0) return 0.6; // no preference given: neutral
   const own = CATEGORIES[place.category].interests;
   if (own.some((i) => q.interests.includes(i))) {
@@ -123,7 +143,9 @@ function qualityFeature(place: Place): number {
       (place.notable ? 0.3 : 0) +
       (place.website ? 0.15 : 0) +
       (place.openingHours ? 0.15 : 0) +
-      (place.address || place.phone ? 0.1 : 0),
+      (place.address || place.phone ? 0.1 : 0) -
+      // Chains are fine, but a day out should lean toward local spots.
+      (isChain(place) ? 0.15 : 0),
   );
 }
 
@@ -157,12 +179,15 @@ function openSomewhereInWindow(place: Place, q: ExploreQuery, duration: number):
   return sawUnknown ? "unknown" : "closed";
 }
 
-export type ExclusionReason = "closed" | "kids" | "budget" | "distance" | "duration" | "nightlife_hours";
+export type ExclusionReason = "closed" | "kids" | "budget" | "distance" | "duration" | "nightlife_hours" | "dining_style";
 
 export function scorePlace(place: Place, q: ExploreQuery): { scored?: ScoredPlace; excluded?: ExclusionReason } {
   const budget = totalBudget(q);
   const duration = visitDuration(place, q.durationMinutes);
   if (duration === null) return { excluded: "duration" };
+  // Sit-down and fancy dinners rule out fast food; fancy also rules out chains.
+  if ((q.dining === "sitdown" || q.dining === "upscale") && place.category === "fast_food") return { excluded: "dining_style" };
+  if (q.dining === "upscale" && place.category === "restaurant" && isChain(place)) return { excluded: "dining_style" };
 
   const group = groupFeature(place, q);
   if (group === 0) return { excluded: "kids" };
@@ -205,6 +230,7 @@ export function scorePlace(place: Place, q: ExploreQuery): { scored?: ScoredPlac
     .slice(0, 3)
     .map((r) => FEATURE_LABELS[r.k]);
   if (onWishlist) reasons.unshift("On your wishlist");
+  if (q.dining === "upscale" && upscaleScore(place) >= LIKELY_UPSCALE) reasons.unshift(place.reservation ? "Likely upscale · takes reservations" : "Likely upscale");
 
   const warnings: string[] = [];
   if (open === "unknown") warnings.push("Opening hours not confirmed");
@@ -236,6 +262,7 @@ export const EXCLUSION_LABELS: Record<ExclusionReason, string> = {
   distance: "too far for your transport",
   duration: "need more time than you have",
   nightlife_hours: "wrong time of day",
+  dining_style: "not your food style",
 };
 
 export function rankPlaces(places: Place[], q: ExploreQuery) {

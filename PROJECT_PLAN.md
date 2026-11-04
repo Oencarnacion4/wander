@@ -73,6 +73,8 @@ closed for your whole window (from real `opening_hours`) · not allowed for your
 
 **Step 3: Score** = Σ weight × feature (multi-attribute utility). Small adjustments: +0.06 if on your wishlist, −0.04 if hours are unconfirmed. Every card has a **"Why this?"** panel showing the exact breakdown.
 
+**Food rules (so a plan reads like a real day out):** meals only at meal times (one per meal window, 4+ hours apart); no two food stops back to back; at most one coffee/dessert stop per 4 hours. **Food style** (Any / Casual / Sit-down / Fancy night out): "fancy" is an *estimate* from real map tags (`reservation=*`, no `brand=*` chain tag, cuisine type, website), because OpenStreetMap has no price levels. Chains get a small penalty in every plan, so local spots come first.
+
 **Step 4: Itinerary = orienteering problem with time windows** (NP-hard). We use **beam search** (width 8): at each step, extend the best partial plans with feasible next stops (open on arrival, fits time and budget), score them by value discounted for travel time, penalize repeated categories (variety), and keep only one meal per meal window.
 
 **Take Me Somewhere** uses the same idea: hard limits (max travel time, budget, domestic vs international) then weighted features (interest overlap, cost fit, share of trip spent traveling, season, group, novelty). **Surprise Me** samples from a **softmax** over scores: `P(i) ∝ exp(score_i / T)`, so better matches are likelier but not guaranteed.
@@ -116,7 +118,7 @@ All tables have Row-Level Security: `auth.uid() = user_id`.
 
 ### Stage 2 — Better data (next)
 - [ ] **Live events (Ticketmaster Discovery API, free key):** real games, concerts and shows during your time window, with venue, start time and listed price range. Event venues (stadiums, theaters) are already kept out of auto-generated plans until this lands.
-- [ ] **Google Places API (optional key)** as a second provider: ratings, `priceLevel`, photos → more *confirmed* prices and a real popularity feature
+- [ ] **Google Places API (optional key)** — would turn "fancy" from an estimate into a confirmed `priceLevel`;  as a second provider: ratings, `priceLevel`, photos → more *confirmed* prices and a real popularity feature
 - [ ] Real routing times (OSRM or Google Routes) instead of the distance × detour estimate
 - [ ] Reorder stops by drag-and-drop
 - [ ] Rate visits (1–5) and use ratings to learn personal weights

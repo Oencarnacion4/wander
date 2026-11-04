@@ -141,6 +141,8 @@ export function normalize(el: OverpassElement): Place | null {
     notable: Boolean(t.wikidata || t.wikipedia),
     fee: t.fee === "no" ? "free" : t.fee === "yes" ? "paid" : undefined,
     charge: t.charge,
+    brand: t.brand,
+    reservation: t.reservation,
     source: "openstreetmap",
   };
 }

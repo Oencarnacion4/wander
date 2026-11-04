@@ -28,6 +28,15 @@ const MEAL_WINDOWS: { name: string; range: [number, number] }[] = [
   { name: "dinner", range: [17 * 60, 21 * 60 + 30] },
 ];
 const MIN_MINUTES_BETWEEN_MEALS = 240;
+const TREATS = new Set(["cafe", "dessert"]);
+/** Anything you eat or drink at. Two of these in a row (café → sandwich → ice cream) isn't a plan. */
+function isFoodStop(category: string) {
+  return Boolean(CATEGORIES[category as keyof typeof CATEGORIES]?.meal) || TREATS.has(category);
+}
+/** Coffee/dessert stops allowed: one per 4 hours of outing. */
+function maxTreats(duration: number) {
+  return Math.max(1, Math.floor(duration / 240));
+}
 
 export function mealWindow(t: number): string | null {
   return MEAL_WINDOWS.find(({ range: [a, b] }) => t >= a && t <= b)?.name ?? null;
@@ -50,6 +59,8 @@ interface State {
   used: Set<string>;
   catCount: Map<string, number>;
   meals: { at: number; window: string }[];
+  treats: number;
+  lastWasFood: boolean;
   objective: number;
 }
 
@@ -90,6 +101,8 @@ function tryNext(state: State, c: ScoredPlace, q: ExploreQuery, budget: number) 
   const mid = (cost.low + cost.high) / 2;
   if (state.costLow + cost.low > budget || state.costMid + mid > budget * 1.1) return null;
 
+  if (isFoodStop(c.place.category) && state.lastWasFood) return null;
+  if (TREATS.has(c.place.category) && state.treats >= maxTreats(q.durationMinutes)) return null;
   if (cat.meal) {
     const w = mealWindow(arrive);
     if (!w) return null; // no sit-down meals at 3:30pm
@@ -103,6 +116,8 @@ function tryNext(state: State, c: ScoredPlace, q: ExploreQuery, budget: number) 
   gain -= (state.catCount.get(c.place.category) ?? 0) * REPEAT_CATEGORY_PENALTY;
   // Eating at mealtime is part of a good day out.
   if (cat.meal) gain += c.place.category === "restaurant" ? 0.12 : 0.06;
+  // Asked for a fancy night out: make dinner the centerpiece.
+  if (q.dining === "upscale" && c.place.category === "restaurant" && mealWindow(arrive) === "dinner") gain += 0.25;
   // Time spent waiting is wasted time.
   gain -= (arrive - state.t - travel) * 0.002;
   if (gain <= 0) return null;
@@ -126,6 +141,8 @@ export function buildItinerary(candidates: ScoredPlace[], q: ExploreQuery): Itin
     used: new Set(),
     catCount: new Map(),
     meals: [],
+    treats: 0,
+    lastWasFood: false,
     objective: 0,
   };
   let beam: State[] = [start];
@@ -154,6 +171,8 @@ export function buildItinerary(candidates: ScoredPlace[], q: ExploreQuery): Itin
           used: new Set([...s.used, c.place.id]),
           catCount,
           meals: CATEGORIES[c.place.category].meal ? [...s.meals, { at: r.stop.arrive, window: mealWindow(r.stop.arrive) ?? "" }] : s.meals,
+          treats: s.treats + (TREATS.has(c.place.category) ? 1 : 0),
+          lastWasFood: isFoodStop(c.place.category),
           objective: s.objective + r.gain,
         });
       }
@@ -173,6 +192,9 @@ export function buildItinerary(candidates: ScoredPlace[], q: ExploreQuery): Itin
   }
 
   const notes: string[] = [];
+  if (q.dining === "upscale" && !best.stops.some((st) => pool.find((c) => c.place.id === st.placeId)?.place.category === "restaurant")) {
+    notes.push("No restaurant nearby looked upscale in the map data, or none fit your time and budget. Try Sit-down, a bigger budget, or an evening start.");
+  }
   if (best.stops.length === 0) notes.push("Nothing fit all of your constraints. Try more time, a bigger budget, or a different transport mode.");
   const endMinutes = best.stops.length ? best.stops[best.stops.length - 1].depart : q.startMinutes;
   if (endMinutes < q.startMinutes + q.durationMinutes - 45 && best.stops.length) {
@@ -223,6 +245,11 @@ export function retime(placeIds: string[], byId: Map<string, ScoredPlace>, q: Ex
     t = depart;
     lat = c.place.lat;
     lng = c.place.lng;
+  }
+  for (let i = 1; i < stops.length; i++) {
+    const a = byId.get(stops[i - 1].placeId)!.place;
+    const b = byId.get(stops[i].placeId)!.place;
+    if (isFoodStop(a.category) && isFoodStop(b.category)) notes.push(`${a.name} and ${b.name} are back-to-back food stops.`);
   }
   const meals = stops.filter((st) => CATEGORIES[byId.get(st.placeId)!.place.category].meal);
   for (let i = 1; i < meals.length; i++) {

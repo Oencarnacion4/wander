@@ -42,6 +42,10 @@ export interface Place {
   /** fee=no / fee=yes / charge=… from the source, when present. */
   fee?: "free" | "paid";
   charge?: string;
+  /** brand=* tag: present on chains (Subway, Starbucks…). */
+  brand?: string;
+  /** reservation=* tag: yes / recommended / required / no. */
+  reservation?: string;
   source: "openstreetmap";
 }
 
@@ -106,6 +110,8 @@ export interface ExploreQuery {
   visited?: Record<string, string>;
   /** Places on the user's wishlist. */
   wishlist?: string[];
+  /** Food style: any / casual / sitdown / upscale. */
+  dining?: "any" | "casual" | "sitdown" | "upscale";
 }
 
 /** Estimated (or confirmed) cost for the whole group, in USD. */

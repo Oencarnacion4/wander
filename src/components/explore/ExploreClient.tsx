@@ -58,6 +58,7 @@ export function ExploreClient() {
     kids: [],
     transport: "drive",
     interests: ["food", "outdoors"],
+    dining: "any",
   });
   const [res, setRes] = useState<ExploreResponse | null>(null);
   const [planIds, setPlanIds] = useState<string[]>([]);
@@ -107,6 +108,7 @@ export function ExploreClient() {
       children: form.kids.map((age) => ({ age })),
       transport: form.transport,
       interests: form.kids.length ? form.interests.filter((i) => i !== "nightlife") : form.interests,
+      dining: form.dining,
       visited: lastVisitByPlace,
       wishlist: wishlist.map((w) => w.placeId),
     };

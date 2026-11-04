@@ -2,6 +2,7 @@
 
 import { Baby, Bike, Bus, Car, CarTaxiFront, Footprints, Loader2, Minus, Plus, Sparkles } from "lucide-react";
 import { INTERESTS } from "@/lib/categories";
+import { DINING_OPTIONS, type Dining } from "@/lib/dining";
 import type { BudgetMode, Interest, Transport } from "@/lib/types";
 import type { HomeBase } from "@/lib/store-types";
 import { LocationPicker, type PickedLocation } from "@/components/LocationPicker";
@@ -19,6 +20,7 @@ export interface FormState {
   kids: number[]; // ages
   transport: Transport;
   interests: Interest[];
+  dining: Dining;
 }
 
 export const SLOTS = {
@@ -217,6 +219,35 @@ export function ExploreForm({
             );
           })}
         </div>
+      </div>
+
+      <div>
+        <Label hint="for meals in your plan">Food style</Label>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {DINING_OPTIONS.map((d) => (
+            <button
+              key={d.key}
+              type="button"
+              aria-pressed={form.dining === d.key}
+              onClick={() =>
+                // A fancy dinner needs food in the plan.
+                setForm({ ...form, dining: d.key, interests: d.key !== "any" && !form.interests.includes("food") ? [...form.interests, "food"] : form.interests })
+              }
+              className={cn(
+                "rounded-2xl border px-3 py-2.5 text-left transition-colors",
+                form.dining === d.key ? "border-orchid bg-orchid/10 text-orchid-dark" : "border-line bg-card hover:bg-mist",
+              )}
+            >
+              <span className="block text-sm font-semibold">{d.label}</span>
+              <span className="block text-xs text-muted">{d.hint}</span>
+            </button>
+          ))}
+        </div>
+        {form.dining === "upscale" && (
+          <p className="mt-2 text-xs text-muted">
+            The map data doesn&apos;t list price levels, so &quot;fancy&quot; is WANDER&apos;s estimate: restaurants that take reservations, aren&apos;t chains, and serve cuisines typical of upscale dining. Pick an evening start for dinner.
+          </p>
+        )}
       </div>
 
       <button
