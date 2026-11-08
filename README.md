@@ -1,6 +1,6 @@
 # WANDER — Less Planning. More Living.
 
-**Live site:** _link coming after deployment_
+**Live site: [wander-olivia.vercel.app](https://wander-olivia.vercel.app)**
 
 WANDER helps people decide what to do, where to eat and where to go next. You tell it who you're with, how much you want to spend, how much time you have and when you're going. It recommends **real, verified places**, builds a **realistic itinerary**, and keeps track of everywhere you've been.
 
