@@ -6,6 +6,9 @@ import { rankPlaces } from "@/lib/scoring";
 import { parseExploreQuery } from "@/lib/validate";
 import type { ExploreResponse } from "@/lib/types";
 
+// Calls slow outside services (map and flight data); give them time on Vercel.
+export const maxDuration = 60;
+
 export async function POST(request: Request) {
   let q;
   try {

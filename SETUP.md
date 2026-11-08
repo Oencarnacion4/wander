@@ -74,8 +74,20 @@ Take Me Somewhere → **Cheapest flights** lists the cheapest fares from the air
 
 Maps, geocoding and photos need no keys. Place search works without a key, but much more reliably with Geoapify.
 
-## 6. Deploy (for the class demo)
+## 6. Deploy to Vercel
 
-1. At https://vercel.com, click **Add New → Project** and import the `wander` repo.
-2. Add the same environment variables as `.env.local`, then click **Deploy**.
-3. In Supabase, open **Authentication → URL Configuration** and set **Site URL** to your Vercel URL.
+1. At https://vercel.com, sign in with GitHub, click **Add New → Project**, and import the `wander` repository. Vercel detects Next.js automatically; leave the build settings as they are.
+2. Before clicking **Deploy**, open **Environment Variables** and add (values from your `.env.local`):
+
+   | Name | Secret? |
+   |---|---|
+   | `GEOAPIFY_API_KEY` | Yes: server only |
+   | `TRAVELPAYOUTS_TOKEN` | Yes: server only |
+   | `NEXT_PUBLIC_SUPABASE_URL` | No: public by design |
+   | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`) | No: public by design, data protected by row-level security |
+   | `CONTACT_EMAIL` | Optional |
+
+   `NEXT_PUBLIC_*` values are baked in at build time: if you add or change them later, redeploy.
+3. Click **Deploy**.
+4. In Supabase, open **Authentication → URL Configuration** and set **Site URL** to your Vercel URL (also add it under **Redirect URLs**).
+5. Every push to `main` redeploys automatically.

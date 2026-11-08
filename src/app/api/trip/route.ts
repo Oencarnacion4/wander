@@ -4,6 +4,9 @@ import { fetchPlaces } from "@/lib/providers/places";
 import { rankPlaces } from "@/lib/scoring";
 import type { ExploreQuery, Interest, Itinerary, ScoredPlace, Transport } from "@/lib/types";
 
+// Calls slow outside services (map and flight data); give them time on Vercel.
+export const maxDuration = 60;
+
 /**
  * Day-by-day plan for a trip. Fetches real places around the destination once,
  * then runs the Explore planner for each day, removing places already used so

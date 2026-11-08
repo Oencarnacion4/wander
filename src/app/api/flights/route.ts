@@ -1,11 +1,14 @@
 import { cheapestFlights } from "@/lib/providers/flights";
 
+// Calls slow outside services (map and flight data); give them time on Vercel.
+export const maxDuration = 60;
+
 /** GET /api/flights?lat=..&lng=..&oneWay=0|1&month=YYYY-MM&nonstop=0|1 */
 export async function GET(request: Request) {
   const token = process.env.TRAVELPAYOUTS_TOKEN?.trim();
   if (!token) {
     return Response.json(
-      { error: "Flight search isn't set up yet. Add a free TRAVELPAYOUTS_TOKEN to .env.local (see SETUP.md), then restart WANDER.", setup: true },
+      { error: "Flight search isn't set up on this server yet (the flight data token is missing).", setup: true },
       { status: 501 },
     );
   }
