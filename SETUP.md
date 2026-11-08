@@ -87,7 +87,7 @@ Maps, geocoding and photos need no keys. Place search works without a key, but m
    | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (or `NEXT_PUBLIC_SUPABASE_ANON_KEY`) | No: public by design, data protected by row-level security |
    | `CONTACT_EMAIL` | Optional |
 
-   `NEXT_PUBLIC_*` values are baked in at build time: if you add or change them later, redeploy.
+   Supabase values are baked in at build time: if you add or change them later, redeploy. Vercel drops the `NEXT_PUBLIC_` prefix from variables saved as "Secret" (`SUPABASE_URL`, `SUPABASE_ANON_KEY`); WANDER accepts either name.
 3. Click **Deploy**.
 4. In Supabase, open **Authentication → URL Configuration** and set **Site URL** to your Vercel URL (also add it under **Redirect URLs**).
 5. Every push to `main` redeploys automatically.

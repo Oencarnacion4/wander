@@ -1,9 +1,9 @@
 import { createBrowserClient } from "@supabase/ssr";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-// Supabase now calls this the "publishable" key; older projects call it the "anon" key. Either works.
-const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const url = process.env.WANDER_SUPABASE_URL;
+// Set in next.config.ts from NEXT_PUBLIC_SUPABASE_* or SUPABASE_* (publishable / anon key).
+const key = process.env.WANDER_SUPABASE_KEY;
 
 export const supabaseConfigured = Boolean(url && key);
 
